@@ -114,7 +114,6 @@
       z-index: 2;
     }
 
-    /* Acqua animata */
     .acqua {
       position: absolute;
       inset: 0;
@@ -161,6 +160,22 @@
     .ok { color: var(--ok); }
     .ko { color: var(--danger); }
 
+    #debugPanel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: 35vh;
+      overflow: auto;
+      background: rgba(2,6,23,.95);
+      color: #38bdf8;
+      font-size: 12px;
+      padding: 6px;
+      display: none;
+      z-index: 9999;
+      text-align: left;
+    }
+
     @media (max-width: 420px) {
       .tubo { width: 56px; height: 170px; }
       .tubi { gap: 14px; }
@@ -169,7 +184,7 @@
 </head>
 <body>
   <div class="container" id="app">
-    <h1 id="titolo">Labirinto delle Tubature</h1>
+    <h1>Labirinto delle Tubature</h1>
     <div class="subtitle">Seleziona la dimensione corretta del tuo personaggio</div>
 
     <div id="selezionePeso" class="scelte">
@@ -194,7 +209,11 @@
     <div class="msg" id="messaggio"></div>
   </div>
 
+  <div id="debugPanel"></div>
+
   <script>
+    const DEBUG = true; // <-- metti false per disattivare debug
+
     const livelli = [2, 3, 3, 2, 1];
     const combinazioneCorretta = ["sinistra", "centro", "centro", "destra", "centro"];
 
@@ -204,12 +223,26 @@
     let tempo = 15;
     let scelteUtente = [];
 
+    function debugUI(msg) {
+      if (!DEBUG) return;
+      const panel = document.getElementById("debugPanel");
+      panel.style.display = "block";
+      const time = new Date().toLocaleTimeString();
+      panel.innerHTML += `<div>[${time}] ${msg}</div>`;
+      panel.scrollTop = panel.scrollHeight;
+      console.log("[DEBUG]", msg);
+    }
+
     function scegliPeso(tipo) {
-      if (localStorage.getItem("pesoSelezionato")) return;
+      if (localStorage.getItem("pesoSelezionato")) {
+        debugUI("Peso già selezionato: " + localStorage.getItem("pesoSelezionato"));
+        return;
+      }
 
       localStorage.setItem("pesoSelezionato", tipo);
-
       tempoBase = tipo === "leggero" ? 8 : tipo === "pesante" ? 30 : 15;
+
+      debugUI("Peso scelto: " + tipo + " → tempoBase: " + tempoBase + "s");
 
       document.getElementById("selezionePeso").style.display = "none";
       document.getElementById("gioco").style.display = "block";
@@ -219,11 +252,12 @@
     function avviaLivello() {
       clearInterval(timer);
       document.getElementById("messaggio").innerHTML = "";
-      
+
       const tubiContainer = document.getElementById("tubi");
       tubiContainer.innerHTML = "";
 
       const numTubi = livelli[pagina];
+      debugUI("Avvio livello " + (pagina + 1) + " con " + numTubi + " tubi");
 
       for (let i = 0; i < numTubi; i++) {
         const tubo = document.createElement("div");
@@ -247,6 +281,7 @@
       timer = setInterval(() => {
         tempo--;
         aggiornaTimerUI();
+        debugUI("Timer: " + tempo + "s");
 
         if (tempo <= 0) {
           resetGioco("⏱ Tempo scaduto! Torni alla tubatura iniziale.");
@@ -264,6 +299,7 @@
       clearInterval(timer);
       el.classList.add("selezionato");
       scelteUtente.push(posizione);
+      debugUI("Scelta: " + posizione + " (livello " + (pagina + 1) + ")");
       pagina++;
 
       setTimeout(() => {
@@ -277,6 +313,8 @@
 
     function controllaRisultato() {
       const ok = scelteUtente.every((v, i) => v === combinazioneCorretta[i]);
+      debugUI("Scelte utente: " + JSON.stringify(scelteUtente));
+      debugUI("Esito finale: " + (ok ? "CORRETTO" : "SBAGLIATO"));
 
       if (ok) {
         document.getElementById("messaggio").innerHTML =
@@ -290,7 +328,11 @@
       clearInterval(timer);
       pagina = 0;
       scelteUtente = [];
-      document.getElementById("messaggio").innerHTML = "<span class='ko'>" + msg + "</span>";
+      debugUI("RESET: " + msg);
+
+      document.getElementById("messaggio").innerHTML =
+        "<span class='ko'>" + msg + "</span>";
+
       document.getElementById("app").classList.add("shake");
 
       setTimeout(() => {
@@ -298,6 +340,10 @@
         avviaLivello();
       }, 900);
     }
+
+    window.addEventListener("error", (e) => {
+      debugUI("ERRORE JS: " + e.message);
+    });
   </script>
 </body>
 </html>
