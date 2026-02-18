@@ -233,13 +233,15 @@
       console.log("[DEBUG]", msg);
     }
 
+    let pesoSelezionato = null;
+    
     function scegliPeso(tipo) {
-      if (localStorage.getItem("pesoSelezionato")) {
-        debugUI("Peso già selezionato: " + localStorage.getItem("pesoSelezionato"));
+      if (pesoSelezionato) {
+        debugUI("Peso già selezionato: " + pesoSelezionato);
         return;
       }
 
-      localStorage.setItem("pesoSelezionato", tipo);
+      pesoSelezionato = tipo;
       tempoBase = tipo === "leggero" ? 8 : tipo === "pesante" ? 30 : 15;
 
       debugUI("Peso scelto: " + tipo + " → tempoBase: " + tempoBase + "s");
