@@ -40,6 +40,7 @@
       opacity: .7;
       font-size: .9rem;
       margin-bottom: 10px;
+      transition: opacity .25s ease;
     }
 
     .scelte button {
@@ -169,7 +170,7 @@
 <body>
   <div class="container" id="app">
     <h1>Labirinto delle Tubature</h1>
-    <div class="subtitle">Seleziona la dimensione corretta del tuo personaggio</div>
+    <div class="subtitle" id="subtitle">Seleziona la dimensione corretta del tuo personaggio</div>
 
     <div id="selezionePeso" class="scelte">
       <button onclick="scegliPeso('leggero')">Leggero</button>
@@ -224,6 +225,8 @@
 
       document.getElementById("selezionePeso").style.display = "none";
       document.getElementById("gioco").style.display = "block";
+      document.getElementById("subtitle").innerText = "Seleziona il tubo da percorrere";
+
       avviaLivello();
     }
 
