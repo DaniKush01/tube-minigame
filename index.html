@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Gioco</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #111;
+      color: #fff;
+      padding-top: 50px;
+    }
+    button {
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Fai la tua scelta</h1>
+  <p id="testo">Sei davanti a due pulsanti. Che fai?</p>
+
+  <div id="bottoni">
+    <button onclick="scelta('A')">Premi A</button>
+    <button onclick="scelta('B')">Premi B</button>
+  </div>
+
+  <script>
+    function scelta(x) {
+      if (x === 'A') {
+        document.getElementById("testo").innerText = "Hai scelto A. Fine del gioco 😎";
+      } else {
+        document.getElementById("testo").innerText = "Hai scelto B. Game over 💀";
+      }
+      document.getElementById("bottoni").style.display = "none";
+    }
+  </script>
+
+</body>
+</html>
