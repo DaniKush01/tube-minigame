@@ -209,7 +209,7 @@
 
       localStorage.setItem("pesoSelezionato", tipo);
 
-      tempoBase = tipo === "leggero" ? 8 : tipo === "pesante" ? 25 : 15;
+      tempoBase = tipo === "leggero" ? 8 : tipo === "pesante" ? 30 : 15;
 
       document.getElementById("selezionePeso").style.display = "none";
       document.getElementById("gioco").style.display = "block";
@@ -219,8 +219,7 @@
     function avviaLivello() {
       clearInterval(timer);
       document.getElementById("messaggio").innerHTML = "";
-      document.getElementById("paginaCorrente").innerText = pagina + 1;
-
+      
       const tubiContainer = document.getElementById("tubi");
       tubiContainer.innerHTML = "";
 
