@@ -2,43 +2,303 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Mini Gioco</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Labirinto delle Tubature</title>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #111;
-      color: #fff;
-      padding-top: 50px;
+    :root {
+      --accent: #22d3ee;
+      --danger: #ef4444;
+      --ok: #22c55e;
     }
-    button {
-      padding: 15px 30px;
-      margin: 10px;
-      font-size: 16px;
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+      background: radial-gradient(circle at top, #020617, #020617 40%, #000);
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 8px 0 4px;
+      font-size: 1.4rem;
+      letter-spacing: .5px;
+    }
+
+    .subtitle {
+      opacity: .7;
+      font-size: .9rem;
+      margin-bottom: 10px;
+    }
+
+    .scelte button {
+      background: #0b1220;
+      color: #e5e7eb;
+      border: 1px solid #1f2933;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 1rem;
       cursor: pointer;
+    }
+
+    .scelte button:active { transform: scale(.97); }
+
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0 6px;
+      font-size: .95rem;
+    }
+
+    .timer-wrap {
+      width: 100%;
+      background: #020617;
+      border: 1px solid #0b1220;
+      border-radius: 999px;
+      overflow: hidden;
+      height: 10px;
+      margin: 8px 0 14px;
+    }
+
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--accent), #38bdf8);
+      transition: width 1s linear;
+    }
+
+    .tubi {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 16px;
+    }
+
+    .tubo {
+      width: 64px;
+      height: 190px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #9ca3af, #4b5563);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,.35), 0 10px 25px rgba(0,0,0,.4);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+
+    .tubo:active { transform: translateY(2px) scale(.98); }
+
+    .tubo::before {
+      content: "";
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 44px;
+      height: 22px;
+      background: #9ca3af;
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,.25);
+      z-index: 2;
+    }
+
+    /* Acqua animata */
+    .acqua {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(34,211,238,.85) 0%,
+        rgba(34,211,238,.85) 10%,
+        rgba(56,189,248,.85) 20%,
+        rgba(34,211,238,.85) 30%
+      );
+      opacity: .85;
+      transform: translateY(-100%);
+      animation: flow 1.2s linear infinite;
+    }
+
+    @keyframes flow {
+      from { transform: translateY(-100%); }
+      to   { transform: translateY(100%); }
+    }
+
+    .tubo.selezionato {
+      outline: 3px solid var(--accent);
+      box-shadow: 0 0 0 6px rgba(34,211,238,.15), 0 10px 30px rgba(34,211,238,.35);
+    }
+
+    .shake {
+      animation: shake .4s linear;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+
+    .msg {
+      margin-top: 14px;
+      min-height: 1.5em;
+      font-weight: 600;
+    }
+
+    .ok { color: var(--ok); }
+    .ko { color: var(--danger); }
+
+    @media (max-width: 420px) {
+      .tubo { width: 56px; height: 170px; }
+      .tubi { gap: 14px; }
     }
   </style>
 </head>
 <body>
+  <div class="container" id="app">
+    <h1 id="titolo">Labirinto delle Tubature</h1>
+    <div class="subtitle">Scegli il tubo giusto prima che scada il tempo</div>
 
-  <h1>Fai la tua scelta</h1>
-  <p id="testo">Sei davanti a due pulsanti. Che fai?</p>
+    <div id="selezionePeso" class="scelte">
+      <button onclick="scegliPeso('leggero')">Leggero</button>
+      <button onclick="scegliPeso('normale')">Normale</button>
+      <button onclick="scegliPeso('pesante')">Pesante</button>
+    </div>
 
-  <div id="bottoni">
-    <button onclick="scelta('A')">Premi A</button>
-    <button onclick="scelta('B')">Premi B</button>
+    <div id="gioco" style="display:none;">
+      <div class="hud">
+        <div>Pagina <strong><span id="paginaCorrente">1</span>/5</strong></div>
+        <div>⏳ <span id="timerTxt">15</span>s</div>
+      </div>
+
+      <div class="timer-wrap">
+        <div class="timer-bar" id="timerBar"></div>
+      </div>
+
+      <div class="tubi" id="tubi"></div>
+    </div>
+
+    <div class="msg" id="messaggio"></div>
   </div>
 
   <script>
-    function scelta(x) {
-      if (x === 'A') {
-        document.getElementById("testo").innerText = "Hai scelto A. Fine del gioco 😎";
-      } else {
-        document.getElementById("testo").innerText = "Hai scelto B. Game over 💀";
+    const livelli = [2, 3, 3, 2, 1];
+    const combinazioneCorretta = ["sinistra", "centro", "centro", "destra", "centro"];
+
+    let pagina = 0;
+    let timer = null;
+    let tempoBase = 15;
+    let tempo = 15;
+    let scelteUtente = [];
+
+    function scegliPeso(tipo) {
+      if (localStorage.getItem("pesoSelezionato")) return;
+
+      localStorage.setItem("pesoSelezionato", tipo);
+
+      tempoBase = tipo === "leggero" ? 8 : tipo === "pesante" ? 25 : 15;
+
+      document.getElementById("selezionePeso").style.display = "none";
+      document.getElementById("gioco").style.display = "block";
+      avviaLivello();
+    }
+
+    function avviaLivello() {
+      clearInterval(timer);
+      document.getElementById("messaggio").innerHTML = "";
+      document.getElementById("paginaCorrente").innerText = pagina + 1;
+
+      const tubiContainer = document.getElementById("tubi");
+      tubiContainer.innerHTML = "";
+
+      const numTubi = livelli[pagina];
+
+      for (let i = 0; i < numTubi; i++) {
+        const tubo = document.createElement("div");
+        tubo.className = "tubo";
+
+        const acqua = document.createElement("div");
+        acqua.className = "acqua";
+        tubo.appendChild(acqua);
+
+        let posizione = "centro";
+        if (numTubi === 2) posizione = i === 0 ? "sinistra" : "destra";
+        if (numTubi === 3) posizione = i === 0 ? "sinistra" : i === 1 ? "centro" : "destra";
+
+        tubo.onclick = () => scegliTubo(posizione, tubo);
+        tubiContainer.appendChild(tubo);
       }
-      document.getElementById("bottoni").style.display = "none";
+
+      tempo = tempoBase;
+      aggiornaTimerUI();
+
+      timer = setInterval(() => {
+        tempo--;
+        aggiornaTimerUI();
+
+        if (tempo <= 0) {
+          resetGioco("⏱ Tempo scaduto! Torni alla tubatura iniziale.");
+        }
+      }, 1000);
+    }
+
+    function aggiornaTimerUI() {
+      document.getElementById("timerTxt").innerText = tempo;
+      const perc = (tempo / tempoBase) * 100;
+      document.getElementById("timerBar").style.width = perc + "%";
+    }
+
+    function scegliTubo(posizione, el) {
+      clearInterval(timer);
+      el.classList.add("selezionato");
+      scelteUtente.push(posizione);
+      pagina++;
+
+      setTimeout(() => {
+        if (pagina >= livelli.length) {
+          controllaRisultato();
+        } else {
+          avviaLivello();
+        }
+      }, 300);
+    }
+
+    function controllaRisultato() {
+      const ok = scelteUtente.every((v, i) => v === combinazioneCorretta[i]);
+
+      if (ok) {
+        document.getElementById("messaggio").innerHTML =
+          "<span class='ok'>✅ Strada corretta! Attendi il master.</span>";
+      } else {
+        resetGioco("❌ Torni alla tubatura iniziale, combinazione sbagliata!");
+      }
+    }
+
+    function resetGioco(msg) {
+      clearInterval(timer);
+      pagina = 0;
+      scelteUtente = [];
+      document.getElementById("messaggio").innerHTML = "<span class='ko'>" + msg + "</span>";
+      document.getElementById("app").classList.add("shake");
+
+      setTimeout(() => {
+        document.getElementById("app").classList.remove("shake");
+        avviaLivello();
+      }, 900);
     }
   </script>
-
 </body>
 </html>
